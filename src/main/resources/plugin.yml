@@ -1,0 +1,10 @@
+name: BlockCreator
+version: '1.0'
+main: dev.nedhuman.blockcreator.BlockCreator
+api-version: '1.20'
+author: NedHuman
+description: Plugin which efficiently stores which player created which block
+commands:
+  bcinspect:
+    description: Toggle between inspector mode
+    permission: blockcreator.bcinspect
