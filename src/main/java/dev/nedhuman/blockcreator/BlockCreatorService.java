@@ -46,7 +46,7 @@ public class BlockCreatorService {
             ChunkCache cache = new ChunkCache();
 
             // create a temporary user map to store byte-uuid
-            Map<Byte, UUID> userMap = createUserMap(cache, chunk, pdc);
+            Map<Byte, UUID> userMap = createUserMap(chunk, pdc);
 
             loadChunkData(cache, pdc, userMap);
             
@@ -73,7 +73,13 @@ public class BlockCreatorService {
 
     }
 
-    private Map<Byte, UUID> createUserMap(ChunkCache cache, Chunk chunk, PersistentDataContainer pdc) {
+    /**
+     * Takes the users byte array from the provided PDC and loads it into a byte-uuid map
+     * @param chunk the chunk
+     * @param pdc the PDC
+     * @return a byte-uuid map
+     */
+    private Map<Byte, UUID> createUserMap(Chunk chunk, PersistentDataContainer pdc) {
         Map<Byte, UUID> userMap = new HashMap<>();
 
         byte[] usersData = pdc.get(users, PersistentDataType.BYTE_ARRAY);
@@ -83,7 +89,7 @@ public class BlockCreatorService {
         }
 
         int i = 0;
-        while(i < usersData.length) {
+        do {
             byte index = usersData[i++];
 
             byte[] uuidBytes = new byte[16];
@@ -93,11 +99,17 @@ public class BlockCreatorService {
 
             UUID uuid = Utils.getUUID(uuidBytes);
             userMap.put(index, uuid);
-        }
+        } while(i < usersData.length);
 
         return userMap;
     }
 
+    /**
+     *
+     * @param cache
+     * @param pdc
+     * @param userMap
+     */
     private void loadChunkData(
             ChunkCache cache,
             PersistentDataContainer pdc,
@@ -106,7 +118,7 @@ public class BlockCreatorService {
         byte[] layersData = pdc.get(data, PersistentDataType.BYTE_ARRAY);
 
         int i = 0;
-        while(i < layersData.length) { // Reading each layer
+        do { // Reading each layer
 
             int header = ((layersData[i++] << 8) | layersData[i++]); // Read the first two bytes
 
@@ -120,9 +132,8 @@ public class BlockCreatorService {
             int[] hexadecentMap = new int[hexadecantsNum];
             int l = 0;
             while(l++ < hexadecantsNum) {
-                if(l % 2 == 0) {
-                    hexadecentMap[l-1] = layersData[i] >> 4;
-                    i++;
+                if(l % 2 != 0) {
+                    hexadecentMap[l-1] = layersData[i++] >> 4;
                 }else{
                     hexadecentMap[l-1] = layersData[i] & 0xf;
                     if(l == hexadecantsNum) i++;
@@ -140,8 +151,7 @@ public class BlockCreatorService {
 
             }
 
-
-        }
+        } while (i < layersData.length);
     }
 
     private static void readHexadecant(
@@ -157,8 +167,8 @@ public class BlockCreatorService {
         int l = 0;
         for(int p = 0; p < 4; p++) {
             for(int m = 0; m < 4; m++) {
-                if(data[l] != 0) { // zero indicates no owner
-                    byte id = data[l++];
+                byte id = data[l++];
+                if(id != 0) { // zero indicates no owner
 
                     if(!userMap.containsKey(id)) throw new IllegalStateException("Corrupt chunk found; invalid user id "+id);
 
