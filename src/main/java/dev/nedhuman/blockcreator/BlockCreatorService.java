@@ -11,9 +11,9 @@ import org.bukkit.persistence.PersistentDataContainer;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
+import java.io.ByteArrayOutputStream;
+import java.nio.ByteBuffer;
+import java.util.*;
 
 /**
  * Service class for block creator stuff
@@ -27,13 +27,11 @@ public class BlockCreatorService {
 
 
     private Map<Chunk, ChunkCache> chunkCache;
-    private boolean dumpData; // If cached data was modified and needs to be updated in chunk NBT
 
     public BlockCreatorService(Plugin plugin)
     {
         data = new NamespacedKey(plugin, "data");
         users = new NamespacedKey(plugin, "users");
-        dumpData = false;
         chunkCache = new HashMap<>();
 
         new BlockCreatorServiceListeners(this, plugin);
@@ -57,13 +55,48 @@ public class BlockCreatorService {
     }
 
     protected void fireChunkUnload(Chunk chunk) {
+        PersistentDataContainer pdc = chunk.getPersistentDataContainer();
 
+        if(chunkCache.containsKey(chunk)) {
+            ChunkCache cache = chunkCache.get(chunk);
+            Map<UUID, Byte> userMap = new HashMap<>();
+
+            ByteArrayOutputStream deposit = new ByteArrayOutputStream();
+
+            // todo: nvm this wont work cus i changed it
+            for(
+                    Map.Entry<Integer,UUID> l
+                    :
+                    cache.layers.entrySet()
+            ) {
+                int layerY = l.getKey();
+
+                List<Utils.Hexadecant> hexadecants = new ArrayList<>();
+
+                // cycle through each of the hexadecants
+                for(int n = 0; n < 16; n++) {
+
+                    Utils.Hexadecant hexadecant = new Utils.Hexadecant(n);
+                    boolean proceed = false;
+
+                    // cycle through the 16 blocks in the hexadecant
+                    for(int i = 0; i < 16; i++) {
+                        int chunkX = (i >> 2) + (n >> n)*4;
+                        int chunkY = (i & 0x3) + (n & 0x03)*4;
+
+
+                    }
+                }
+
+            }
+        }
     }
 
 
     private static class ChunkCache {
 
-        private final Map<Short, Table<Integer, Integer, UUID>> layers;
+        // the 32 bit integer is the chunk coordinate
+        private final Map<Integer, UUID> layers;
         public boolean dump; // True if the data has been modified and needs to be dumped to chunk NBT storage.
 
         public ChunkCache() {
@@ -105,7 +138,7 @@ public class BlockCreatorService {
     }
 
     /**
-     *
+     * Load the chunk's data into memory
      * @param cache
      * @param pdc
      * @param userMap
@@ -122,10 +155,9 @@ public class BlockCreatorService {
 
             int header = ((layersData[i++] << 8) | layersData[i++]); // Read the first two bytes
 
-            // The 9 rightmost bits indicate the Y layer. we mask em out
-            short layer = (short) (header & (0x1ff));
-            cache.layers.put(layer, HashBasedTable.create()); // initialise the table
-            // The next 4 bits are the amount of hexadecants in the layer, minus one
+            // The 9 rightmost bits indicate the Y layer, plus 64. we mask em out
+            int layer = (header & (0x1ff))-64;
+            // The next 4 bits are the amount of parts (1-16) in the layer, minus one
             int hexadecantsNum = ((header >> 9) & 0xf)+1;
 
             // key is hexadecents by order, value is hexadecent position
@@ -147,22 +179,31 @@ public class BlockCreatorService {
                     data[o] = layersData[i++];
                 }
 
-                readHexadecant(data, hexadecentMap[n], cache.layers.get(layer), userMap);
+                readHexadecant(data, hexadecentMap[n], cache.layers, userMap, layer);
 
             }
 
         } while (i < layersData.length);
     }
 
+    /**
+     * Convert the read hexadecent byte data to UUIDs based on the provided user map
+     * @param data the 16 bytes of data from the hexadecant
+     * @param hexadecant which of the 16 hexadecants is this
+     * @param layers the deposit
+     * @param userMap the user map to take info from
+     * @param y the y coordinate
+     */
     private static void readHexadecant(
             byte[] data,
             int hexadecant,
-            Table<Integer, Integer, UUID> layer,
-            Map<Byte, UUID> userMap
+            Map<Integer, UUID> layers,
+            Map<Byte, UUID> userMap,
+            int y
     ) {
 
-        int hexadecantX = (hexadecant >> 2) * 4;
-        int hexadecantY = (hexadecant & 0x2) * 4;
+        int hexadecantX = (hexadecant >> 2) * 4; // this hexadecant's position on the x axis
+        int hexadecantZ = (hexadecant & 0x2) * 4; // on the z one
 
         int l = 0;
         for(int p = 0; p < 4; p++) {
@@ -172,7 +213,9 @@ public class BlockCreatorService {
 
                     if(!userMap.containsKey(id)) throw new IllegalStateException("Corrupt chunk found; invalid user id "+id);
 
-                    layer.put(hexadecantX + p, hexadecantY + m, userMap.get(id));
+                    layers.put(
+                            Utils.compressChunkCoords(hexadecantX + p, hexadecantZ + m, y),
+                            userMap.get(id));
                 }
             }
         }
@@ -188,23 +231,57 @@ public class BlockCreatorService {
     PUBLIC API METHODS
      */
 
-    public boolean hasOwner(Location location) throws IllegalArgumentException
+    public boolean hasOwner(Location location) throws IllegalStateException
     {
-        return false;
+        Chunk chunk = location.getChunk();
+        if(!chunkCache.containsKey(chunk)) {
+            throw new IllegalStateException("Attempted to read data on an unloaded chunk");
+        }
+
+        int chunkX = location.getBlockX() & 0xf;
+        int chunkY = location.getBlockY() & 0xf;
+
+        return chunkCache.get(chunk).layers.get(location.getBlockY()).contains(chunkX, chunkY);
     }
 
-    public void setOwner(Location location, UUID uuid) throws IllegalArgumentException
+    public void setOwner(Location location, UUID uuid) throws IllegalStateException
     {
+        Chunk chunk = location.getChunk();
+        if(!chunkCache.containsKey(chunk)) {
+            throw new IllegalStateException("Attempted to write data on an unloaded chunk");
+        }
 
+        int chunkX = location.getBlockX() & 0xf;
+        int chunkY = location.getBlockY() & 0xf;
+
+        chunkCache.get(chunk).layers.get(location.getBlockY()).put(chunkX, chunkY, uuid);
+        chunkCache.get(chunk).dump = true;
     }
 
-    public UUID getOwner(Location location)  throws IllegalArgumentException
+    public UUID getOwner(Location location)  throws IllegalStateException
     {
-        return null;
+        Chunk chunk = location.getChunk();
+        if(!chunkCache.containsKey(chunk)) {
+            throw new IllegalStateException("Attempted to read data on an unloaded chunk");
+        }
+
+        int chunkX = location.getBlockX() & 0xf;
+        int chunkY = location.getBlockY() & 0xf;
+
+        return chunkCache.get(chunk).layers.get(location.getBlockY()).get(chunkX, chunkY);
     }
 
-    public void removeOwner(Location location)  throws IllegalArgumentException
+    public void removeOwner(Location location)  throws IllegalStateException
     {
+        Chunk chunk = location.getChunk();
+        if(!chunkCache.containsKey(chunk)) {
+            throw new IllegalStateException("Attempted to write data to an unloaded chunk");
+        }
 
+        int chunkX = location.getBlockX() & 0xf;
+        int chunkY = location.getBlockY() & 0xf;
+
+        chunkCache.get(chunk).layers.get(location.getBlockY()).remove(chunkX, chunkY);
+        chunkCache.get(chunk).dump = true;
     }
 }
