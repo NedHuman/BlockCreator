@@ -1,6 +1,9 @@
 # BlockCreator
 A Minecraft plugin that compactly and efficiently stores the creator of each block in a chunk.
 
+# **This is still a WIP and doesn't work**
+
+
 ##  How It Works
 
 Each chunk stores block ownership using two NBT byte arrays: `users` and `data`.
