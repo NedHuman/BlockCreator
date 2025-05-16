@@ -22,6 +22,6 @@ public class BlockCreatorServiceListeners implements Listener {
 
     @EventHandler
     public void onChunkUnload(ChunkUnloadEvent event) {
-        service.fireChunkUnload(event.getChunk());
+        service.fireChunkUnload(event.getChunk(), false);
     }
 }

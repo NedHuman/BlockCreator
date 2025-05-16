@@ -12,29 +12,34 @@ public final class Utils {
         return new UUID(bb.getLong(), bb.getLong());
     }
 
-    public static int compressChunkCoords(int x, int z, int y) {
-        if(x > 15 || z > 15 || y > 319 || y < -64) {
-            throw new IllegalArgumentException("Illegal arguments for chunk coords");
-        }
-
-        return x | (z << 4) | ( (y+64) << 8);
+    public static byte compressChunkCoords(int x, int z) {
+        x &= 0xf;
+        z &= 0xf;
+        return (byte) (x | (z << 4));
     }
 
-    public static int[] decompressChunkCoords(int chunkCoords) {
+    public static int[] decompressChunkCoords(byte chunkCoords) {
         int x = chunkCoords & 0xF;
         int z = (chunkCoords >> 4) & 0xF;
-        int y = (chunkCoords >> 8) & 0x1FF + 64;
 
-        return new int[] {x, z, y};
+        return new int[] {x, z};
+    }
+
+    public static String arrayToString(byte[] arr) {
+        StringBuilder builder = new StringBuilder();
+        for(byte i : arr) {
+            builder.append("0x").append(Integer.toHexString(i & 0xff)).append(" ");
+        }
+        return builder.toString();
     }
 
     public static class Hexadecant {
         private int placement;
-        public UUID[] contents;
+        public byte[] contents;
 
         public Hexadecant(int placement) {
             this.placement = placement;
-            contents = new UUID[16];
+            contents = new byte[16];
         }
 
         public int getPlacement() {
