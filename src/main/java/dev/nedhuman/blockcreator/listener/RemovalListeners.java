@@ -21,55 +21,55 @@ public class RemovalListeners implements Listener {
         BlockCreatorService service = BlockCreator.getInstance().getService();
         service.removeOwner(b.getLocation());
     }
-//    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-//    public void onBlockExplode(BlockExplodeEvent event) {
-//        Block b = event.getBlock();
-//
-//        BlockCreatorService service = BlockCreator.getInstance().getService();
-//        service.removeOwner(b.getLocation());
-//    }
-//    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-//    public void onBlockBurn(BlockBurnEvent event) {
-//        Block b = event.getBlock();
-//
-//        BlockCreatorService service = BlockCreator.getInstance().getService();
-//        service.removeOwner(b.getLocation());
-//    }
-//    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-//    public void onBlockChange(EntityChangeBlockEvent event) {
-//        Block b = event.getBlock();
-//
-//        BlockCreatorService service = BlockCreator.getInstance().getService();
-//        service.removeOwner(b.getLocation());
-//    }
-//    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-//    public void onBlockFade(BlockFadeEvent event) {
-//        Block b = event.getBlock();
-//
-//        BlockCreatorService service = BlockCreator.getInstance().getService();
-//        service.removeOwner(b.getLocation());
-//    }
-//    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-//    public void onBlockGrow(StructureGrowEvent event) {
-//        for(BlockState i : event.getBlocks()) {
-//            Block b = i.getBlock();
-//
-//            BlockCreatorService service = BlockCreator.getInstance().getService();
-//            service.removeOwner(b.getLocation());
-//        }
-//    }
-//    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-//    public void onBlockFertalise(BlockFertilizeEvent event) {
-//        Block b = event.getBlock();
-//
-//        BlockCreatorService service = BlockCreator.getInstance().getService();
-//        service.removeOwner(b.getLocation());
-//    }
-//    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
-//    public void onBlockDecay(LeavesDecayEvent event) {
-//        Block b = event.getBlock();
-//
-//        BlockCreatorService service = BlockCreator.getInstance().getService();
-//        service.removeOwner(b.getLocation());
-//    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockExplode(BlockExplodeEvent event) {
+        Block b = event.getBlock();
+
+        BlockCreatorService service = BlockCreator.getInstance().getService();
+        service.removeOwner(b.getLocation());
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockBurn(BlockBurnEvent event) {
+        Block b = event.getBlock();
+
+        BlockCreatorService service = BlockCreator.getInstance().getService();
+        service.removeOwner(b.getLocation());
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockChange(EntityChangeBlockEvent event) {
+        Block b = event.getBlock();
+
+        BlockCreatorService service = BlockCreator.getInstance().getService();
+        service.removeOwner(b.getLocation());
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockFade(BlockFadeEvent event) {
+        Block b = event.getBlock();
+
+        BlockCreatorService service = BlockCreator.getInstance().getService();
+        service.removeOwner(b.getLocation());
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockGrow(StructureGrowEvent event) {
+        for(BlockState i : event.getBlocks()) {
+            Block b = i.getBlock();
+
+            BlockCreatorService service = BlockCreator.getInstance().getService();
+            service.removeOwner(b.getLocation());
+        }
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockFertalise(BlockFertilizeEvent event) {
+        Block b = event.getBlock();
+
+        BlockCreatorService service = BlockCreator.getInstance().getService();
+        service.removeOwner(b.getLocation());
+    }
+    @EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+    public void onBlockDecay(LeavesDecayEvent event) {
+        Block b = event.getBlock();
+
+        BlockCreatorService service = BlockCreator.getInstance().getService();
+        service.removeOwner(b.getLocation());
+    }
 }

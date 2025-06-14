@@ -38,4 +38,24 @@ public class InspectorListener implements Listener {
             }
         }
     }
+
+    @EventHandler
+    public void onBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+
+        if(BlockCreator.getInstance().getInspecting().contains(player.getUniqueId())) {
+            event.setCancelled(true);
+
+            Location location = event.getBlock().getLocation();
+
+            BlockCreatorService service = BlockCreator.getInstance().getService();
+            if (service.hasOwner(location)) {
+                UUID owner = service.getOwner(location);
+                player.sendMessage(ChatColor.YELLOW + "Block owner is " + ChatColor.AQUA + owner.toString());
+                player.sendMessage(ChatColor.YELLOW + "Username " + ChatColor.RED + Bukkit.getOfflinePlayer(owner).getName());
+            } else {
+                player.sendMessage(ChatColor.YELLOW + "Block has no owner");
+            }
+        }
+    }
 }
