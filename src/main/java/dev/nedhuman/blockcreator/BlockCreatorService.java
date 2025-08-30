@@ -106,7 +106,7 @@ public class BlockCreatorService {
                     // ok now we write to deposit
                     int header = 0;
                     header |= (layer.getKey() + 64) & 0x1ff;
-                    header |= (hexadecants.size() - 1 & 0xf) << 9;
+                    header |= ((hexadecants.size() - 1) & 0xf) << 9;
                     // write header now (2 bytes)
                     deposit.write(header >> 8);
                     deposit.write(header);
@@ -117,9 +117,9 @@ public class BlockCreatorService {
                     boolean halfFull = false;
                     for (Utils.Hexadecant h : hexadecants) {
                         if (!halfFull) {
-                            work |= (byte) (h.getPlacement() << 4);
+                            work = (byte) (h.getPlacement() << 4);
                         } else {
-                            work = (byte) (h.getPlacement() & 0xf);
+                            work |= (byte) (h.getPlacement() & 0xf);
                             deposit.write(work);
                             work = 0;
                         }
@@ -239,18 +239,28 @@ public class BlockCreatorService {
             // key is hexadecants by order, value is hexadecent position
             int[] hexadecentMap = new int[hexadecantsNum];
             int l = 0;
-            while(l++ < hexadecantsNum) {
-                if(l % 2 != 0) {
-                    hexadecentMap[l-1] = layersData[i++] >> 4;
+//            while(l++ < hexadecantsNum) {
+//                if(l % 2 != 0) {
+//                    hexadecentMap[l-1] = layersData[i++] >> 4;
+//                }else{
+//                    hexadecentMap[l-1] = layersData[i] & 0xf;
+//                    if(l == hexadecantsNum) i++;
+//                }
+//            }
+            while(l < hexadecantsNum) {
+                if(l % 2 == 0) {
+                    hexadecentMap[l] = layersData[i] >> 4;
+                    if(l+1 == hexadecantsNum) i++;
                 }else{
-                    hexadecentMap[l-1] = layersData[i] & 0xf;
-                    if(l == hexadecantsNum) i++;
+                    hexadecentMap[l] = layersData[i++] & 0xf;
                 }
+                l++;
             }
 
             debug("Loaded hexadecants map "+Arrays.toString(hexadecentMap));
 
             // Now for reading each hexadecant
+            cache.layers.put(layer, new HashMap<>()); // need to create the layer first
             for(int n = 0; n < hexadecantsNum; n++) {
                 ensureEnoughData(i, 16, layersData.length);
                 byte[] data = new byte[16];
@@ -260,7 +270,6 @@ public class BlockCreatorService {
 
                 debug("Hexadecant "+n+" data is "+Arrays.toString(data));
 
-                cache.layers.put(layer, new HashMap<>()); // need to create the layer first
                 readHexadecant(data, hexadecentMap[n], cache.layers.get(layer), userMap);
 
             }
@@ -322,6 +331,9 @@ public class BlockCreatorService {
         return userArray;
     }
 
+    /**
+     * Manually save all the data from RAM to NBT storage
+     */
     public void saveChunks() {
         for(Map.Entry<Chunk, ChunkCache> i : chunkCache.entrySet()) {
             if(i.getValue().dump) {
@@ -360,6 +372,12 @@ public class BlockCreatorService {
     PUBLIC API METHODS
      */
 
+    /**
+     * Check if a block has an owner
+     * @param location the location
+     * @return
+     * @throws IllegalStateException if the chunk is not loaded
+     */
     public boolean hasOwner(Location location) throws IllegalStateException
     {
         Chunk chunk = location.getChunk();
@@ -375,6 +393,12 @@ public class BlockCreatorService {
         return layer.containsKey(Utils.compressChunkCoords(chunkX, chunkZ));
     }
 
+    /**
+     * Change a block owner
+     * @param location the block location
+     * @param uuid the player uuid
+     * @throws IllegalStateException if the chunk is not loaded
+     */
     public void setOwner(Location location, UUID uuid) throws IllegalStateException
     {
         Chunk chunk = location.getChunk();
@@ -395,6 +419,12 @@ public class BlockCreatorService {
         }
     }
 
+    /**
+     * Get the block owner
+     * @param location the location
+     * @return
+     * @throws IllegalStateException if the chunk is not loaded
+     */
     public UUID getOwner(Location location)  throws IllegalStateException
     {
         Chunk chunk = location.getChunk();
@@ -412,6 +442,11 @@ public class BlockCreatorService {
         return layer.get(Utils.compressChunkCoords(chunkX, chunkZ));
     }
 
+    /**
+     * Remove a block owner
+     * @param location the location
+     * @throws IllegalStateException if the chunk is not loaded
+     */
     public void removeOwner(Location location)  throws IllegalStateException
     {
         Chunk chunk = location.getChunk();

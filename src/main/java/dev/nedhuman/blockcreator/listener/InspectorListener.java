@@ -11,6 +11,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 
 import java.util.UUID;
@@ -21,8 +22,7 @@ public class InspectorListener implements Listener {
     public void onInteract(PlayerInteractEvent event) {
         Player player = event.getPlayer();
 
-        if((event.getAction() == Action.LEFT_CLICK_BLOCK ||
-                event.getAction() == Action.RIGHT_CLICK_BLOCK) &&
+        if(event.getAction() == Action.LEFT_CLICK_BLOCK &&
                 BlockCreator.getInstance().getInspecting().contains(player.getUniqueId())) {
             event.setCancelled(true);
 
@@ -41,6 +41,26 @@ public class InspectorListener implements Listener {
 
     @EventHandler
     public void onBreak(BlockBreakEvent event) {
+        Player player = event.getPlayer();
+
+        if(BlockCreator.getInstance().getInspecting().contains(player.getUniqueId())) {
+            event.setCancelled(true);
+
+            Location location = event.getBlock().getLocation();
+
+            BlockCreatorService service = BlockCreator.getInstance().getService();
+            if (service.hasOwner(location)) {
+                UUID owner = service.getOwner(location);
+                player.sendMessage(ChatColor.YELLOW + "Block owner is " + ChatColor.AQUA + owner.toString());
+                player.sendMessage(ChatColor.YELLOW + "Username " + ChatColor.RED + Bukkit.getOfflinePlayer(owner).getName());
+            } else {
+                player.sendMessage(ChatColor.YELLOW + "Block has no owner");
+            }
+        }
+    }
+
+    @EventHandler
+    public void onPlace(BlockPlaceEvent event) {
         Player player = event.getPlayer();
 
         if(BlockCreator.getInstance().getInspecting().contains(player.getUniqueId())) {
