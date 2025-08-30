@@ -96,5 +96,5 @@ also minecraft compresses its chunks with the deflate algorithm, that's why this
 
 
 ## API
-All the public API methods are in dev.nedhuman.blockcreator.BlockCreatorService, they are
+To get the API, use BlockCreator.getAPI(), the methods are: (they are documented with javadoc comments)
 ```hasOwner, setOwner, getOwner, removeOwner``
