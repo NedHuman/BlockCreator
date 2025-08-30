@@ -92,3 +92,9 @@ Hexadecant Data (32 bytes total):
 ---
 
 also minecraft compresses its chunks with the deflate algorithm, that's why this data isn't compressed. Double compression would be counter productive
+
+
+
+## API
+All the public API methods are in dev.nedhuman.blockcreator.BlockCreatorService, they are
+```hasOwner, setOwner, getOwner, removeOwner``
