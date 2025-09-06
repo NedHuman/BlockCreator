@@ -97,4 +97,4 @@ also minecraft compresses its chunks with the deflate algorithm, that's why this
 
 ## API
 To get the API, use BlockCreator.getAPI(), the methods are: (they are documented with javadoc comments)
-```hasOwner, setOwner, getOwner, removeOwner``
+```hasOwner, setOwner, getOwner, removeOwner```
